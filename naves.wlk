@@ -1,21 +1,33 @@
-class NaveDeCarga {
+class Nave {
+	var property velocidad = 0
 
-	var velocidad = 0
+	method recibirAmenaza()
+
+	method propulsar() { self.aumentarVelocidadA(20000) }
+
+	method prepararViaje() { self.aumentarVelocidadA(15000) }
+
+	method aumentarVelocidadA(_velocidadNueva) {
+		velocidad = (velocidad + _velocidadNueva).min(300000)
+	}
+
+	method encontrarEnemigo() {
+		self.recibirAmenaza()
+		self.propulsar()
+	}
+}
+
+class NaveDeCarga inherits Nave {
 	var property carga = 0
 
 	method sobrecargada() = carga > 100000
 
 	method excedidaDeVelocidad() = velocidad > 100000
 
-	method recibirAmenaza() {
-		carga = 0
-	}
-
+	override method recibirAmenaza() { carga = 0 }
 }
 
-class NaveDePasajeros {
-
-	var velocidad = 0
+class NaveDePasajeros  inherits Nave {
 	var property alarma = false
 	const cantidadDePasajeros = 0
 
@@ -25,30 +37,41 @@ class NaveDePasajeros {
 
 	method estaEnPeligro() = velocidad > self.velocidadMaximaLegal() or alarma
 
-	method recibirAmenaza() {
-		alarma = true
-	}
+	override method recibirAmenaza() { alarma = true }
 
 }
 
-class NaveDeCombate {
-	var property velocidad = 0
+class NaveDeCombate  inherits Nave {
 	var property modo = reposo
 	const property mensajesEmitidos = []
 
-	method emitirMensaje(mensaje) {
-		mensajesEmitidos.add(mensaje)
-	}
+	method emitirMensaje(mensaje) { mensajesEmitidos.add(mensaje) }
 	
 	method ultimoMensaje() = mensajesEmitidos.last()
 
 	method estaInvisible() = velocidad < 10000 and modo.invisible()
 
-	method recibirAmenaza() {
-		modo.recibirAmenaza(self)
-	}
+	override method recibirAmenaza() { modo.recibirAmenaza(self) }
+
+	override method prepararViaje() { modo.viajar(self) }
 
 }
+
+class NaveDeCargaRadioactiva inherits NaveDeCarga {
+	var estaSellado = false
+
+	method sellarAlVacio() { estaSellado = true }
+
+	method estaSellado() { return estaSellado }
+
+	override method recibirAmenaza() { velocidad = 0 }
+
+	override method prepararViaje() { 
+		self.aumentarVelocidadA(15000)
+		self.sellarAlVacio() 
+	}
+}
+
 
 object reposo {
 
@@ -58,6 +81,10 @@ object reposo {
 		nave.emitirMensaje("¡RETIRADA!")
 	}
 
+	method viajar(nave) { 
+		nave.emitirMensaje("Saliendo en mision") 
+		nave.modo(ataque)
+	}
 }
 
 object ataque {
@@ -68,4 +95,5 @@ object ataque {
 		nave.emitirMensaje("Enemigo encontrado")
 	}
 
+	method viajar(nave) { nave.emitirMensaje("Volviendo a la base") }
 }
